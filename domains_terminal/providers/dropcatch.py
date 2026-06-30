@@ -1,8 +1,13 @@
-"""DropCatch API provider for domain-agent.
+"""DropCatch API provider.
 
-Wraps the DropCatch v2 REST API. Handles OAuth2 authentication with
-auto-refresh and maps API responses to domain-agent's Domain model.
-"""
+Purpose: Fetch domain names from DropCatch v2 REST API — live auctions,
+active backorders, and bulk downloads. Handles OAuth2 (auto-refresh).
+
+Input: Env vars for credentials; API JSON responses from api.dropcatch.com
+Output: List[Domain] persisted to storage
+Dependencies: requests, domains_terminal.models.Domain,
+              domains_terminal.storage.Storage
+Side effects: Reads/writes ~/.config/domains-terminal/token.json"""
 
 from __future__ import annotations
 

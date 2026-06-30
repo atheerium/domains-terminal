@@ -1,11 +1,15 @@
-"""CLI entry point for Domains Terminal.
+"""CLI entry point — Click commands.
 
-Inspired by the Bloomberg Terminal — one command to discover, analyse, and
-acquire premium domain names.  Every command outputs JSON by default so
-LLM agents can interact with the tool programmatically.
+Purpose: Thin command-line interface for all domain-terminal operations.
+Contains NO business logic — delegates everything to core/ and providers/.
+JSON output by default (agent-first design). ``--format table`` for humans.
 
-Usage::
+Input: sys.argv parsed by click
+Output: JSON or table to stdout (via domains_terminal.utils)
+Dependencies: click, all core/ and providers/ modules
+Side effects: Writes to stdout, invokes all storage/providers operations
 
+Usage:
     dt init
     dt scrape --source dropcatch --tld com,io
     dt filter --rules brandable,short
@@ -15,8 +19,6 @@ Usage::
     dt top --limit 10 --min-score 70
     dt stats
     dt pipeline --sources dropcatch --rules brandable,short
-
-All commands output JSON by default.  Pass ``--format table`` for tabular output.
 """
 
 from __future__ import annotations

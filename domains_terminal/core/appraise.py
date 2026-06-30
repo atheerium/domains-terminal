@@ -1,9 +1,14 @@
 """Domain appraisal engine.
 
-Estimates retail and wholesale values for domains by comparing against
-comparable sales (comps) stored in the sales cache.  Produces an ``Appraisal``
-object with value ranges, confidence, and a buy recommendation.
-"""
+Purpose: Estimate retail and wholesale domain values using comparable sales
+(comps) from the NameBio sales cache. Falls back to heuristic rules when
+comps are insufficient. Produces a buy recommendation.
+
+Input: Domain, List[Score], List[Sale] (comps) from storage
+Output: Appraisal model persisted to storage
+Dependencies: domains_terminal.models.{Appraisal, Domain, Sale, Score},
+              domains_terminal.storage.Storage
+Side effects: Writes Appraisal rows to SQLite"""
 
 from __future__ import annotations
 

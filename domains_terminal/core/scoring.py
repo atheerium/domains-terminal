@@ -1,10 +1,13 @@
 """Domain scoring engine.
 
-Produces normalized 0-100 scores across multiple dimensions (brandability,
-memorability, length, TLD value, keyword richness, pronounceability).
-Each dimension returns a ``Score`` domain object that can be persisted to the
-Storage layer.
-"""
+Purpose: Produce normalized 0-100 scores across 6 dimensions (brandability,
+mnemonic, length, TLD value, keywords, pronounceable). Each dimension returns
+a ``Score`` model. Composite score is a weighted average.
+
+Input: List[Domain] from storage, optional weight overrides
+Output: List[Score] persisted to storage
+Dependencies: domains_terminal.models.Domain, domains_terminal.storage.Storage
+Side effects: Writes Score rows to SQLite"""
 
 from __future__ import annotations
 

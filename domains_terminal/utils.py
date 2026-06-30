@@ -1,8 +1,12 @@
-"""Utility functions for output and helpers.
+"""Utility functions — output formatting, logging, helpers.
 
-MUST NOT depend on project modules (``domains_terminal.*``) to avoid circular imports.
-Uses only the standard library.
-"""
+Purpose: Shared pure functions for JSON/table output, logging setup, file I/O.
+MUST NOT import from domains_terminal.* (to avoid circular imports).
+
+Input: Raw data dicts, CLI arguments
+Output: Formatted stdout (JSON or table), log messages
+Dependencies: stdlib only
+Side effects: Writes to stdout/stderr, config files"""
 
 from __future__ import annotations
 

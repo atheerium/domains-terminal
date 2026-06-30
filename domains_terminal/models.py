@@ -1,4 +1,12 @@
-"""Pydantic models for domain, metrics, scores, appraisals, and events."""
+"""Domain data models — Pydantic.
+
+Purpose: Central data contract for all modules. Every module in the project
+exchanges data using these models. No raw dicts across module boundaries.
+
+Input: Config values, DB rows, provider API responses → Domain / Score / etc.
+Output: Serialized JSON, DB writes, CLI output
+Dependencies: pydantic (stdlib): BaseModel, Field
+Side effects: None — pure data classes"""
 
 from __future__ import annotations
 

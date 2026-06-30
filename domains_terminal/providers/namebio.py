@@ -1,8 +1,13 @@
-"""NameBio domain sales data provider for domain-agent.
+"""NameBio domain sales data provider.
 
-Fetches historical domain name sales from NameBio's public API and website.
-Useful for comparable sales analysis when appraising domain names.
-"""
+Purpose: Fetch historical domain sales from NameBio's public API and website.
+Provides comparable sales data for the appraisal engine. API key optional —
+falls back to web scraping.
+
+Input: Search keywords or domain names; API JSON from api.namebio.com
+Output: List[Sale] persisted to storage (sales_cache table)
+Dependencies: requests, bs4 (BeautifulSoup), domains_terminal.models.Sale
+Side effects: HTTP requests to namebio.com"""
 
 from __future__ import annotations
 

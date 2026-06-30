@@ -1,4 +1,12 @@
-"""SQLite storage layer for domain-agent."""
+"""SQLite storage layer — single source of truth.
+
+Purpose: Persist all domain data, scores, appraisals, sales cache, and audit events
+to a local SQLite database. This is the single source of truth — no in-memory state.
+
+Input: Domain / Score / Appraisal / Sale / Event models
+Output: Same models read back from database
+Dependencies: stdlib: sqlite3, pathlib
+Side effects: Creates/reads/writes ~/.domains-terminal/domains.db"""
 
 from __future__ import annotations
 

@@ -1,9 +1,13 @@
-"""Domain filtering predicates and Filter class.
+"""Filter predicates and engine.
 
-Provides a rules-based engine that evaluates domains against named predicates.
-Rules are standalone functions that accept a Domain and return bool, making them
-testable in isolation. The Filter class composes rules into pipelines.
-"""
+Purpose: Evaluate domains against named filter rules (brandable, short, tld, etc.).
+Each rule is a standalone predicate function — testable in isolation. The Filter
+class composes multiple rules into a pipeline.
+
+Input: List[Domain] from storage, rule config strings
+Output: Filtered List[Domain] with matching-only domains
+Dependencies: domains_terminal.models.Domain, domains_terminal.storage.Storage
+Side effects: None (pure transformations)"""
 
 from __future__ import annotations
 

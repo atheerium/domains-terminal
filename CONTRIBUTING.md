@@ -1,6 +1,39 @@
 # Contributing to Domains Terminal
 
-## Quick Start
+## Hard Rules (For All Agents)
+
+These rules apply to every change, regardless of who or what makes it.
+
+### Output Contract
+- **Every command MUST output `{status, command, data, meta}`** — this is the contract all agents depend on
+- **JSON is default, `--format table` for humans** — never reverse this
+- **`status` must be `"ok"` or `"error"`** — no other values, no missing field
+
+### Code Structure
+- **One responsibility per module** — no `utils.py` junk drawers. Split when a file exceeds 400 lines.
+- **Engine never imports CLI** — `core/` and `providers/` must not import `click` or reference `cli.py`
+- **All inter-module data uses Pydantic models** — never pass `Dict[str, Any]` across module boundaries
+- **Every public function has type hints** — no untyped parameters, no `Any` unless unavoidable
+- **Every module starts with a contract block** — see existing modules for the pattern
+- **No `# type: ignore`, `@ts-ignore`, or `as any`** — fix the type error
+
+### Data
+- **Storage is the single source of truth** — no in-memory caches, no global state that can be lost
+- **Never write to SQLite directly** — always use `Storage` methods
+- **Never delete rows** — use `status` or `is_available` flags instead
+
+### Changes
+- **One logical change per PR** — a new provider? One PR. A bug fix? Another PR.
+- **Test before and after** — run `pytest tests/ -v` before committing
+- **Update docs with every change** — if you add a provider, update `docs/providers.md`
+- **Update ROADMAP.md** — move items from backlog to current sprint, mark completed
+- **Update CHANGELOG.md** — add entry under the current version
+
+### Dependencies
+- **Prefer stdlib over PyPI** — `sqlite3`, `json`, `pathlib`, `dataclasses` before adding packages
+- **No new dependencies without discussion** — each dep is a maintenance burden
+
+## Development Setup
 
 ```bash
 git clone https://github.com/atheerium/domains-terminal.git
@@ -9,7 +42,6 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -e ".[dev]"
 dt init
-dt scrape --format table
 ```
 
 ## Project Structure
@@ -17,85 +49,90 @@ dt scrape --format table
 ```
 domains-terminal/
 ├── domains_terminal/
-│   ├── __init__.py          # Package metadata
-│   ├── cli.py               # Click CLI entry point
-│   ├── models.py            # Pydantic models
-│   ├── storage.py           # SQLite CRUD
-│   ├── utils.py             # Output formatting, helpers
+│   ├── cli.py              # Click CLI (thin wrapper — no business logic)
+│   ├── models.py           # Pydantic models
+│   ├── storage.py          # SQLite CRUD
+│   ├── utils.py            # Output formatting, helpers (pure functions)
 │   ├── core/
-│   │   ├── filter.py        # Filter predicates + registry
-│   │   ├── scoring.py       # 6-dimension scoring engine
-│   │   └── appraise.py      # Comparable-sales valuation
+│   │   ├── filter.py       # Filter predicates
+│   │   ├── scoring.py      # Scoring engine
+│   │   └── appraise.py     # Valuation engine
 │   └── providers/
-│       ├── dropcatch.py     # DropCatch API v2
-│       ├── expireddomains.py# ExpiredDomains.net scraper
-│       └── namebio.py       # NameBio sales data
-├── tests/                    # Pytest test suite
-├── ARCHITECTURE.md           # System design docs
-├── AGENT.md                  # AI agent collaboration guide
-├── CONTRIBUTING.md           # This file
-└── pyproject.toml            # Build/install config
+│       ├── dropcatch.py    # DropCatch API v2
+│       ├── expireddomains.py
+│       └── namebio.py
+├── docs/
+│   ├── architecture.md     # High-level architecture
+│   ├── database.md         # Schema reference
+│   ├── pipeline.md         # Pipeline flow
+│   ├── providers.md        # Provider patterns
+│   └── decisions/          # ADRs
+├── tests/                  # Pytest test suite
+├── scripts/                # Utility scripts
+├── prompts/                # LLM prompts used internally
+├── AI_CONTEXT.md           # Agent briefing (READ THIS FIRST)
+├── ROADMAP.md              # Current priorities
+├── CHANGELOG.md            # Release history
+├── CONTRIBUTING.md         # This file
+└── pyproject.toml
 ```
-
-## Code Style
-
-- **Formatter**: `black` (default config)
-- **Linter**: `ruff` (default config)
-- **Type hints**: Required on all public functions
-- **Docstrings**: Google/NumPy style on public APIs
-- **Imports**: stdlib → third-party → project (alphabetical groups)
-- **No `as any` or `# type: ignore`**: Type errors must be fixed, not suppressed
-
-## PR Guidelines
-
-1. **One change per PR**: A new provider? Open one PR. A bug fix? Another PR.
-2. **Test before submitting**: `pytest tests/` passes (or note pre-existing failures)
-3. **JSON contract preserved**: Every command must still output `{status, command, data, meta}`
-4. **No speculative features**: Don't add what wasn't asked
-5. **No AI-generated slop**: Keep functions small, comments meaningful, names descriptive
-
-## Feature Requests
-
-Open an issue describing:
-
-- What the feature does
-- Example CLI usage and expected output
-- Any providers/rules/scoring it involves
-- Why it fits Domains Terminal
-
-## Bug Reports
-
-Include:
-
-- The exact command that failed
-- Full output (with `--format json`)
-- Expected vs actual behavior
-- Python version (`python --version`)
 
 ## Adding a New Provider
 
-See [AGENT.md](AGENT.md) for the pattern. Generally:
+1. Create `domains_terminal/providers/myprovider.py`
+2. Add module contract at top
+3. Implement a class with `fetch(*, persist=True, **kwargs) -> List[Domain]`
+4. Use Pydantic `Domain` models
+5. Add tests in `tests/test_providers.py`
+6. Update `docs/providers.md`
+7. Wire into `cli.py` if needed
 
-1. Create `domains_terminal/providers/yourprovider.py`
-2. Wire into `cli.py` if it needs its own subcommand
-3. Test with `pytest`
-4. Run `pip install -e . && dt <command> --format table`
+## Adding a New Filter Rule
 
-## Adding a New Command
+1. Add `rule_xxx(domain: Domain, ...) -> bool` in `core/filter.py`
+2. Register in `_RULES` dict
+3. Add test in `tests/test_filter.py`
+4. Update `docs/pipeline.md`
 
-1. Add a Click command function in `cli.py`
-2. Use the `_output()` helper for formatting
-3. Add the `--format` option supporting both `json` and `table`
-4. Register in `todowrite` planning when multi-step
+## Adding a New Scoring Dimension
+
+1. Add `score_xxx(self, domain: Domain) -> Score` in `core/scoring.py`
+2. Add weight in `DEFAULT_WEIGHTS`
+3. Add test in `tests/test_scoring.py`
+4. Update `docs/architecture.md`
 
 ## Running Tests
 
 ```bash
+# All tests
 pytest tests/ -v
-pytest tests/test_filter.py -v  # Single file
-pytest -k "brandable" -v        # Keyword match
+
+# Single file
+pytest tests/test_filter.py -v
+
+# By keyword
+pytest -k "brandable" -v
+
+# With coverage
+pytest --cov=domains_terminal tests/ -v
 ```
 
-## License
+## Code Style
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+```bash
+# Format
+black domains_terminal/ tests/
+
+# Lint
+ruff domains_terminal/ tests/
+
+# Type check
+mypy domains_terminal/
+```
+
+## Asking for Help
+
+- `dt --help` — discover commands
+- `cat AI_CONTEXT.md` — agent briefing
+- `docs/` — architecture, schema, providers, pipeline
+- Create an issue for questions that aren't answered by docs

@@ -1,11 +1,15 @@
-"""ExpiredDomains.net scraper provider for domain-agent.
+"""ExpiredDomains.net scraper provider.
 
-Provides access to expiring and recently expired domain lists from
-ExpiredDomains.net. Uses ``requests`` + ``BeautifulSoup`` for HTML parsing.
+Purpose: Scrape expiring and recently expired domain lists from
+ExpiredDomains.net using requests + BeautifulSoup. Supports optional
+authenticated access for restricted sections.
 
-Some sections of the site require a free account; pass ``username`` and
-``password`` to the constructor to enable authenticated access.
-"""
+Input: URL, HTML from www.expireddomains.net; optional credentials
+Output: List[Domain] persisted to storage
+Dependencies: requests, bs4 (BeautifulSoup),
+              domains_terminal.models.Domain,
+              domains_terminal.storage.Storage
+Side effects: HTTP requests to expireddomains.net"""
 
 from __future__ import annotations
 
