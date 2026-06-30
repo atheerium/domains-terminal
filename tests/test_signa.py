@@ -10,21 +10,8 @@ import os
 
 import pytest
 
-from domains_terminal.providers.signa import check_trademark, check_trademark_bulk, extract_brand_name
+from domains_terminal.providers.signa import check_trademark, check_trademark_bulk
 
-
-class TestExtractBrandName:
-    def test_extracts_name_from_domain(self):
-        assert extract_brand_name("startup.io") == "startup"
-
-    def test_strips_www(self):
-        assert extract_brand_name("www.apple.com") == "apple"
-
-    def test_strips_protocol(self):
-        assert extract_brand_name("https://example.com") == "example"
-
-    def test_strips_numbers_and_hyphens(self):
-        assert extract_brand_name("my-startup-123.com") == "mystartup"
 
 
 @pytest.mark.skipif(not os.environ.get("SIGNA_API_KEY"), reason="SIGNA_API_KEY not set")
@@ -47,6 +34,17 @@ class TestCheckTrademark:
         """Can check specific offices."""
         result = check_trademark("startup.io", offices=["uspto"])
         assert result["overall_risk"] in ("pass", "review", "fail")
+
+    def test_missing_api_key(self):
+        """When SIGNA_API_KEY is not set, should return an error."""
+        # Temporarily clear the env var to test the missing-key path
+        old_key = os.environ.pop("SIGNA_API_KEY", None)
+        try:
+            result = check_trademark("test.com", api_key=None)
+            assert result["overall_risk"] == "error"
+        finally:
+            if old_key:
+                os.environ["SIGNA_API_KEY"] = old_key
 
 
 @pytest.mark.skipif(not os.environ.get("SIGNA_API_KEY"), reason="SIGNA_API_KEY not set")
