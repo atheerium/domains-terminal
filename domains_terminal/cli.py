@@ -19,6 +19,10 @@ Usage:
     dt top --limit 10 --min-score 70
     dt stats
     dt pipeline --sources dropcatch --rules brandable,short
+    dt available example.com --method full
+    dt available domains.txt --method simple
+    dt trademark startup.io
+    dt trademark domains.txt --offices uspto,wipo
 """
 
 from __future__ import annotations
@@ -531,6 +535,129 @@ def pipeline(sources: str, rules: str, output_format: str) -> None:
             "steps": len(data),
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# available
+# ---------------------------------------------------------------------------
+
+
+@cli.command("available")
+@click.argument("target", required=True)
+@click.option("--method", type=click.Choice(["simple", "full"]), default="simple",
+              help="simple = DNS only, full = WHOIS lookup")
+@click.option("--format", "output_format", type=click.Choice(["json", "table"]), default="json",
+              help="Output format")
+def cmd_available(target: str, method: str, output_format: str) -> None:
+    """Check domain name availability.
+
+    TARGET is a domain name or path to a text file (one domain per line).
+
+    \b
+    Examples:
+      dt available example.com
+      dt available example.com --method full
+      dt available domains.txt --method simple
+    """
+    from domains_terminal.core.availability import check_bulk
+
+    targets = _parse_targets(target)
+
+    results = check_bulk(targets, method=method)
+
+    command = "available"
+    if any(not r.get("available", True) for r in results):
+        command = "available"
+    else:
+        command = "available"
+
+    _output(
+        results,
+        output_format,
+        meta={
+            "method": method,
+            "total": len(results),
+            "registered": sum(1 for r in results if not r.get("available", True)),
+            "available": sum(1 for r in results if r.get("available", False)),
+            "errors": sum(1 for r in results if r.get("error")),
+        },
+        command=command,
+    )
+
+
+# ---------------------------------------------------------------------------
+# trademark
+# ---------------------------------------------------------------------------
+
+
+@cli.command("trademark")
+@click.argument("target", required=True)
+@click.option("--offices", default="uspto,euipo,wipo",
+              help="Offices to check (comma-separated): uspto,euipo,wipo,ukipo")
+@click.option("--format", "output_format", type=click.Choice(["json", "table"]), default="json",
+              help="Output format")
+def cmd_trademark(target: str, offices: str, output_format: str) -> None:
+    """Check trademark availability via Signa.so.
+
+    TARGET is a domain name or path to a text file (one domain per line).
+
+    \b
+    Examples:
+      dt trademark startup.io
+      dt trademark domains.txt --offices uspto,wipo
+    """
+    from domains_terminal.providers.signa import check_trademark_bulk
+
+    targets = _parse_targets(target)
+    office_list = [o.strip() for o in offices.split(",")]
+
+    results = check_trademark_bulk(targets, offices=office_list)
+
+    fails = sum(1 for r in results if r.get("overall_risk") == "fail")
+    reviews = sum(1 for r in results if r.get("overall_risk") == "review")
+    passes = sum(1 for r in results if r.get("overall_risk") == "pass")
+
+    status = "ok"
+    command = "trademark"
+
+    if fails > 0:
+        command = "trademark"
+    elif reviews > 0:
+        command = "trademark"
+
+    _output(
+        results,
+        output_format,
+        meta={
+            "offices": office_list,
+            "total": len(results),
+            "pass": passes,
+            "review": reviews,
+            "fail": fails,
+        },
+        command=command,
+        status=status,
+    )
+
+
+# ---------------------------------------------------------------------------
+# shared helper
+# ---------------------------------------------------------------------------
+
+
+def _parse_targets(target: str) -> list[str]:
+    """Parse a target string into a list of domain names.
+
+    If *target* is a path to an existing file, read one domain per line.
+    Otherwise treat it as a single domain name.
+    """
+    from pathlib import Path
+
+    p = Path(target)
+    if p.exists() and p.is_file():
+        return [line.strip() for line in p.read_text().splitlines()
+                if line.strip() and not line.startswith("#")]
+    return [target]
 
 
 # ---------------------------------------------------------------------------

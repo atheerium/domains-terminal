@@ -71,7 +71,20 @@ This tool is built for AI agents to:
 - **Extend**: Adding a new provider, filter rule, or scoring dimension takes ~20 lines.
 - **Audit**: SQLite database is the single source of truth — query it directly.
 
-See [AGENT.md](AGENT.md) for the agent collaboration guide.
+## Documentation
+
+| File | What it covers |
+|------|---------------|
+| [AI_CONTEXT.md](AI_CONTEXT.md) | Agent briefing — read this before making changes |
+| [docs/features.md](docs/features.md) | Full feature inventory (what's built, what's stub) |
+| [docs/architecture.md](docs/architecture.md) | Module structure, dependency flow, extension patterns |
+| [docs/database.md](docs/database.md) | SQLite schema, tables, usage rules |
+| [docs/pipeline.md](docs/pipeline.md) | Pipeline flow — scrape → filter → score → enrich → appraise → top |
+| [docs/providers.md](docs/providers.md) | Provider patterns, auth, env vars |
+| [docs/decisions/](docs/decisions/) | Architecture Decision Records (why we chose what we chose) |
+| [ROADMAP.md](ROADMAP.md) | Current sprint, backlog, completed items |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Hard rules for contributors (human and AI)
 
 ## License
 
